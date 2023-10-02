@@ -1,6 +1,6 @@
 [versions]
 #AGP
-agp = "8.3.0-alpha05"
+agp = "8.3.0-alpha06"
 #JAVA
 java-version = "1.8"
 #Kotlin
@@ -8,7 +8,8 @@ kotlin = "1.9.10"
 #ksp
 ksp = "1.9.10-1.0.13"
 #Kotlinx
-koltinx-datetime = "0.4.1"
+kotlinx-datetime = "0.4.1"
+kotlinx-serialization = "1.6.0"
 #Core
 core-ktx = "1.12.0"
 #Lifecycle
@@ -29,7 +30,6 @@ espresso-core = "3.5.1"
 tracer = "0.2.6"
 #Koin
 koin-compose = "3.5.0"
-koin-ktor = "3.5.1"
 #Coil
 coil = "2.4.0"
 #Ktor
@@ -44,7 +44,8 @@ zxing = "3.5.2"
 #
 [libraries]
 #koltinx
-koltinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "koltinx-datetime" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-serialization = {group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization"}
 #Core
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 #Lifecycle
@@ -67,13 +68,13 @@ material3 = { group = "androidx.compose.material3", name = "material3" }
 #Koin
 koin-androidx-compose = {group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin-compose"}
 koin-androidx-compose-navigation = {group = "io.insert-koin", name = "koin-androidx-compose-navigation", version.ref = "koin-compose"}
-koin-ktor = {group = "io.insert-koin", name = "koin-ktor", version.ref = "koin-ktor"}
-koin-logger-slf4j = {group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin-ktor"}
 #Coil
 coil = {group = "io.coil-kt",name= "coil-compose",  version.ref="coil"}
 #ktor
 ktor-client-core = {group = "io.ktor", name = "ktor-client-core", version.ref = "ktor"}
 ktor-client-okhttp = {group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor"}
+ktor-client-content-negotiation = {group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor"}
+ktor-serialization-kotlinx-json = {group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor"}
 #Room
 room-runtime = {group = "androidx.room", name = "room-runtime", version.ref = "room"}
 room-compiler = {group = "androidx.room", name = "room-compiler", version.ref = "room"}

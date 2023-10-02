@@ -1,4 +1,4 @@
-package ru.lazyhat.novsu.student
+package ru.lazyhat.novsu.student.ui.activities.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

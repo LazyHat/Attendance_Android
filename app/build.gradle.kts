@@ -65,7 +65,8 @@ android {
 dependencies {
 
     //Kotlinx
-    implementation(libs.koltinx.datetime)
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization)
     //Core
     implementation(libs.core.ktx)
     //Lifecycle
@@ -85,13 +86,13 @@ dependencies {
     //Koin
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.androidx.compose.navigation)
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
     //Coil
     implementation(libs.coil)
     //Ktor
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
     //Room
     annotationProcessor(libs.room.compiler)
     ksp(libs.room.compiler)
