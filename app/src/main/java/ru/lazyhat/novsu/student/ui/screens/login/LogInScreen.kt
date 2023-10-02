@@ -3,28 +3,53 @@ package ru.lazyhat.novsu.student.ui.screens.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import ru.lazyhat.novsu.student.data.repo.MainRepository
 
 @Composable
-fun LoginScreen() {
-    Box {
+fun LoginScreen(onSuccess: () -> Unit) {
+    val viewModel: LoginScreenViewModel = koinViewModel()
+    val logIn: () -> Unit = {
+        viewModel.createEvent(LoginScreenEvent.Login(onSuccess))
+    }
+    val uiState by viewModel.state.collectAsState()
+
+    Box (Modifier.fillMaxSize()) {
         Column(
             Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Log In")
-            TextField()
+            TextField(
+                uiState.username,
+                { viewModel.createEvent(LoginScreenEvent.ChangeUsername(it)) },
+                label = { Text("username") }
+            )
+            TextField(
+                uiState.password,
+                { viewModel.createEvent(LoginScreenEvent.ChangePassword(it)) },
+                label = { Text("password") }
+            )
+            Button(onClick = logIn) {
+                Text("Log In")
+            }
         }
     }
 }
@@ -35,16 +60,25 @@ class LoginScreenViewModel(
     private val _uiState = MutableStateFlow(LoginScreenState("", ""))
     val state = _uiState.asStateFlow()
 
-    private fun onEvent(e: LoginScreenEvent): Any? = when (e) {
+    fun createEvent(e: LoginScreenEvent) = onEvent(e)
+
+    private fun onEvent(e: LoginScreenEvent): Any = when (e) {
         is LoginScreenEvent.ChangeUsername -> {
             updateState { it.copy(username = e.new) }
         }
 
         is LoginScreenEvent.ChangePassword -> {
-            updateState { it.copy(username = e.new) }
+            updateState { it.copy(password = e.new) }
         }
 
-        LoginScreenEvent.Login -> TODO()
+        is LoginScreenEvent.Login -> {
+            viewModelScope.launch {
+                mainRepository.login(state.value.username, state.value.password).let {
+                    if (it)
+                        e.onSuccess()
+                }
+            }
+        }
     }
 
     private fun updateState(new: (old: LoginScreenState) -> LoginScreenState) = _uiState.update(new)
@@ -58,5 +92,5 @@ data class LoginScreenState(
 sealed class LoginScreenEvent {
     data class ChangeUsername(val new: String) : LoginScreenEvent()
     data class ChangePassword(val new: String) : LoginScreenEvent()
-    data object Login : LoginScreenEvent()
+    data class Login(val onSuccess: () -> Unit) : LoginScreenEvent()
 }
