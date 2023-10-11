@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import ru.lazyhat.models.LoginStatus
 import ru.lazyhat.novsu.student.data.repo.MainRepository
 
 @Composable
@@ -30,7 +31,7 @@ fun LoginScreen(onSuccess: () -> Unit) {
     }
     val uiState by viewModel.state.collectAsState()
 
-    Box (Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
         Column(
             Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -47,6 +48,7 @@ fun LoginScreen(onSuccess: () -> Unit) {
                 { viewModel.createEvent(LoginScreenEvent.ChangePassword(it)) },
                 label = { Text("password") }
             )
+            Text(uiState.status.description.orEmpty())
             Button(onClick = logIn) {
                 Text("Log In")
             }
@@ -57,25 +59,30 @@ fun LoginScreen(onSuccess: () -> Unit) {
 class LoginScreenViewModel(
     private val mainRepository: MainRepository
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(LoginScreenState("", ""))
+    private val _uiState = MutableStateFlow(LoginScreenState.Default)
     val state = _uiState.asStateFlow()
 
     fun createEvent(e: LoginScreenEvent) = onEvent(e)
 
     private fun onEvent(e: LoginScreenEvent): Any = when (e) {
         is LoginScreenEvent.ChangeUsername -> {
-            updateState { it.copy(username = e.new) }
+            updateState { it.copy(username = e.new, status = LoginStatus.Idle) }
         }
 
         is LoginScreenEvent.ChangePassword -> {
-            updateState { it.copy(password = e.new) }
+            updateState { it.copy(password = e.new, status = LoginStatus.Idle) }
         }
 
         is LoginScreenEvent.Login -> {
+            updateState { it.copy(status = LoginStatus.Loading) }
             viewModelScope.launch {
                 mainRepository.login(state.value.username, state.value.password).let {
-                    if (it)
+                    if (it) {
                         e.onSuccess()
+                        updateState { it.copy(status = LoginStatus.Idle) }
+                    } else {
+                        updateState { it.copy(status = LoginStatus.Failed) }
+                    }
                 }
             }
         }
@@ -86,8 +93,17 @@ class LoginScreenViewModel(
 
 data class LoginScreenState(
     val username: String,
-    val password: String
-)
+    val password: String,
+    val status: LoginStatus
+) {
+    companion object {
+        val Default = LoginScreenState(
+            "",
+            "",
+            LoginStatus.Idle
+        )
+    }
+}
 
 sealed class LoginScreenEvent {
     data class ChangeUsername(val new: String) : LoginScreenEvent()

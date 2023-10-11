@@ -1,5 +1,6 @@
 package ru.lazyhat.novsu.student.ui.screens.main
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,22 +10,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import ru.lazyhat.novsu.student.ui.activities.qrcode.ScannerContract
 
 @Composable
 fun MainScreen() {
-    var text by remember {
-        mutableStateOf<String?>(null)
-    }
-    val launcherCamera =
-        rememberLauncherForActivityResult(contract = ScannerContract(), onResult = {
-            text = it
+    val context = LocalContext.current
+    val launcherCamera = rememberLauncherForActivityResult(
+        contract = ScannerContract(),
+        onResult = {
+            Toast.makeText(context, "Registered on Lesson", Toast.LENGTH_SHORT).show()
         })
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -35,7 +32,6 @@ fun MainScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text.toString())
             Button({
                 launcherCamera.launch(Unit)
             }) {

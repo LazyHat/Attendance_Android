@@ -1,6 +1,7 @@
 package ru.lazyhat.novsu.student.ui.activities.qrcode
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Size
@@ -17,16 +18,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import ru.lazyhat.models.RegisterStatus
+import ru.lazyhat.novsu.student.data.repo.MainRepository
 import ru.lazyhat.novsu.student.ui.theme.StudentAppTheme
 
 class ScannerActivity : ComponentActivity() {
@@ -34,8 +41,29 @@ class ScannerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             StudentAppTheme {
+                var status by remember { mutableStateOf(RegisterStatus.Idle) }
+                val mainRepository = koinInject<MainRepository>()
                 val context = LocalContext.current
                 val lifecycleOwner = LocalLifecycleOwner.current
+                val scope = rememberCoroutineScope()
+                var token by remember { mutableStateOf<String?>(null) }
+                LaunchedEffect(key1 = token){
+                    token?.let {
+                        status = RegisterStatus.Loading
+                        scope.launch {
+                            mainRepository.registerToLesson(it).let {
+                                if (it) {
+                                    status = RegisterStatus.Idle
+                                    this@ScannerActivity.setResult(Activity.RESULT_OK)
+                                    this@ScannerActivity.finish()
+                                } else {
+                                    status = RegisterStatus.Failed
+                                }
+                            }
+                        }
+                    }
+                }
+
                 val cameraProviderFuture = remember {
                     ProcessCameraProvider.getInstance(context)
                 }
@@ -52,13 +80,14 @@ class ScannerActivity : ComponentActivity() {
                     onResult = {
                         if (it)
                             hasCameraPermission = true
-                        else
-                            this.finish()
+                        else {
+                            this@ScannerActivity.setResult(Activity.RESULT_CANCELED)
+                            this@ScannerActivity.finish()
+                        }
                     })
                 LaunchedEffect(key1 = Unit) {
                     launcher.launch(Manifest.permission.CAMERA)
                 }
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -84,9 +113,8 @@ class ScannerActivity : ComponentActivity() {
                                     imageAnalysis.setAnalyzer(
                                         ContextCompat.getMainExecutor(context),
                                         QrCodeAnalyzer {
-                                            intent.putExtra(ScannerContract.KEY, it)
-                                            this@ScannerActivity.setResult(0, intent)
-                                            this@ScannerActivity.finish()
+                                            if(status == RegisterStatus.Idle)
+                                                token = it
                                         }
                                     )
                                     try {
@@ -103,11 +131,13 @@ class ScannerActivity : ComponentActivity() {
                                 },
                                 modifier = Modifier.weight(1f)
                             )
+                            status.description?.let {
+                                Text(it)
+                            }
                         }
                     }
                 }
             }
         }
     }
-
 }
